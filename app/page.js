@@ -42,7 +42,7 @@ export default function Home() {
         <h1 style={{ color: '#333' }}>🛍️ আমার অনলাইন শপ</h1>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
         {products.map((p, index) => (
           <div key={index} style={{ backgroundColor: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '15px' }}>
             <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '10px' }} />
