@@ -6,30 +6,35 @@ export default function ProductManager() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Default false রাখাই ভালো
 
-  // এডিট করার জন্য স্টেট
   const [editingIndex, setEditingIndex] = useState(null);
   const [editData, setEditData] = useState({ name: '', price: '', image_url: '' });
 
-  // অ্যাডমিন ডিটেইলস (এগুলো আপনি আপনার মতো বদলে নিন)
   const ADMIN_USER = "admin";
   const ADMIN_PASS = "pass123";
+  const API_URL = 'https://sheetdb.io/api/v1/w51cfqk66hrnb';
 
+  // লগইন হওয়ার সাথে সাথে ডাটা ফেচ হবে
   useEffect(() => {
     if (isLoggedIn) {
       fetchProducts();
     }
   }, [isLoggedIn]);
 
-  const fetchProducts = () => {
+  const fetchProducts = async () => {
     setLoading(true);
-    fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb')
-      .then(res => res.json())
-      .then(data => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      if (Array.isArray(data)) {
         setProducts(data);
-        setLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = (e) => {
@@ -41,11 +46,11 @@ export default function ProductManager() {
     }
   };
 
+  // ডিলিট করার সময় name এর জায়গায় encodeURIComponent ব্যবহার করা নিরাপদ
   const handleDelete = async (index) => {
-    if (confirm("আপনি কি নিশ্চিতভাবে এই প্রোডাক্টটি ডিলিট করতে চান?")) {
-      // SheetDB তে ডিলিট করার নিয়ম হলো কোনো ইউনিক ভ্যালু দিয়ে ডিলিট করা
-      // এখানে আমরা নাম দিয়ে ডিলিট করছি (সবচেয়ে সহজ উপায় আপনার বর্তমান শিটে)
-      await fetch(`https://sheetdb.io/api/v1/w51cfqk66hrnb/name/${products[index].name}`, {
+    if (confirm("আপনি কি নিশ্চিত?")) {
+      const nameToDelete = products[index].name;
+      await fetch(`${API_URL}/name/${encodeURIComponent(nameToDelete)}`, {
         method: 'DELETE',
       });
       fetchProducts();
@@ -54,11 +59,12 @@ export default function ProductManager() {
 
   const handleEdit = (index) => {
     setEditingIndex(index);
-    setEditData(products[index]);
+    setEditData({ ...products[index] }); // Spread operator ব্যবহার করে নতুন অবজেক্ট তৈরি
   };
 
   const handleUpdate = async () => {
-    await fetch(`https://sheetdb.io/api/v1/w51cfqk66hrnb/name/${products[editingIndex].name}`, {
+    const originalName = products[editingIndex].name;
+    await fetch(`${API_URL}/name/${encodeURIComponent(originalName)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: editData })
@@ -69,76 +75,78 @@ export default function ProductManager() {
 
   const handleAddNew = async () => {
     const name = prompt("প্রোডাক্টের নাম:");
-    const price = prompt("প্রাইস (শুধু সংখ্যা):");
-    const image_url = prompt("ছবির লিঙ্ক (URL):");
+    const price = prompt("প্রাইস:");
+    const image_url = prompt("ছবির লিঙ্ক:");
 
-    if (name && price && image_url) {
-      await fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb', {
+    if (name && price) {
+      await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: [{ name, price, image_url }] })
+      body: JSON.stringify({ data: [{ name, price, image_url, id: Date.now() }] })
       });
       fetchProducts();
     }
   };
 
+  // লগইন স্ক্রিন
   if (!isLoggedIn) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center', fontFamily: 'Arial' }}>
-        <h2>🔐 ম্যানেজ পেজ লগইন</h2>
-        <form onSubmit={handleLogin} style={{ display: 'inline-block', textAlign: 'left', gap: '10px' }}>
-          <label>ইউজারনেম:</label><br/>
-          <input type="text" onChange={e => setUsername(e.target.value)} style={{ marginBottom: '10px', padding: '8px' }} /><br/>
-          <label>পাসওয়ার্ড:</label><br/>
-          <input type="password" onChange={e => setPassword(e.target.value)} style={{ marginBottom: '10px', padding: '8px' }} /><br/>
-          <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0070f3', color: '#fff', border: 'none', cursor: 'pointer' }}>লগইন</button>
-        </form>
+      <div style={{ padding: '50px', textAlign: 'center', backgroundColor: '#f4f4f4', minHeight: '100vh' }}>
+        <div style={{ display: 'inline-block', padding: '30px', background: '#fff', borderRadius: '10px', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }}>
+          <h2>🔐 Admin Login</h2>
+          <form onSubmit={handleLogin}>
+            <input type="text" placeholder="Username" onChange={e => setUsername(e.target.value)} style={{ display: 'block', margin: '10px auto', padding: '10px', width: '200px' }} />
+            <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} style={{ display: 'block', margin: '10px auto', padding: '10px', width: '200px' }} />
+            <button type="submit" style={{ padding: '10px 25px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Login</button>
+          </form>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1 style={{ textAlign: 'center' }}>🛠️ প্রোডাক্ট ম্যানেজমেন্ট</h1>
-      <button onClick={handleAddNew} style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>➕ নতুন প্রোডাক্ট যোগ করুন</button>
-      
-      {loading ? <p>লোড হচ্ছে...</p> : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
+      <h1 style={{ textAlign: 'center' }}>🛠️ Shop Manager</h1>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <button onClick={handleAddNew} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>➕ Add New Product</button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', fontSize: '20px' }}>লোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {products.map((p, i) => (
-            <div key={i} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div key={i} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <img src={p.image_url} alt="" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '5px' }} />
+                <img src={p.image_url} alt="" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '5px' }} />
                 <div>
-                  <strong>{p.name}</strong><br/>
-                  <span>৳{p.price}</span>
+                  <strong style={{ fontSize: '18px' }}>{p.name}</strong><br/>
+                  <span style={{ color: '#666' }}>৳{p.price}</span>
                 </div>
               </div>
               <div>
-                <button onClick={() => handleEdit(i)} style={{ marginRight: '10px', padding: '5px 10px', backgroundColor: '#ffc107', border: 'none', cursor: 'pointer' }}>Edit</button>
-                <button onClick={() => handleDelete(i)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>Delete</button>
+                <button onClick={() => handleEdit(i)} style={{ padding: '5px 12px', backgroundColor: '#ffc107', border: 'none', borderRadius: '4px', marginRight: '5px', cursor: 'pointer' }}>Edit</button>
+                <button onClick={() => handleDelete(i)} style={{ padding: '5px 12px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* এডিট ফর্ম (পপআপ) */}
+      {/* Edit Modal */}
       {editingIndex !== null && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', width: '90%', maxWidth: '400px' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '12px', width: '90%', maxWidth: '400px' }}>
             <h3>প্রোডাক্ট এডিট করুন</h3>
-            <label>ছবির লিঙ্ক:</label>
-            <input type="text" value={editData.image_url} onChange={e => setEditData({...editData, image_url: e.target.value})} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-            <label>নাম:</label>
-            <input type="text" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-            <label>দাম:</label>
-            <input type="number" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-            <button onClick={handleUpdate} style={{ padding: '10px', backgroundColor: '#0070f3', color: '#fff', border: 'none', width: '100%', cursor: 'pointer' }}>Update</button>
-            <button onClick={() => setEditingIndex(null)} style={{ marginTop: '10px', width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>বাতিল</button>
+            <input type="text" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} style={{ width: '100%', marginBottom: '10px', padding: '10px', boxSizing: 'border-box' }} placeholder="নাম" />
+            <input type="text" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} style={{ width: '100%', marginBottom: '10px', padding: '10px', boxSizing: 'border-box' }} placeholder="দাম" />
+            <input type="text" value={editData.image_url} onChange={e => setEditData({...editData, image_url: e.target.value})} style={{ width: '100%', marginBottom: '15px', padding: '10px', boxSizing: 'border-box' }} placeholder="ছবির ইউআরএল" />
+            <button onClick={handleUpdate} style={{ width: '100%', padding: '10px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', marginBottom: '10px' }}>Update Now</button>
+            <button onClick={() => setEditingIndex(null)} style={{ width: '100%', padding: '5px', background: 'none', border: 'none', color: 'red', cursor: 'pointer' }}>বাতিল</button>
           </div>
         </div>
       )}
     </div>
   );
-    }
-    
+      }
+  
