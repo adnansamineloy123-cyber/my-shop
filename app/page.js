@@ -27,9 +27,17 @@ export default function Home() {
               <p style={{ color: '#777', fontSize: '14px', height: '40px', overflow: 'hidden' }}>{p.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                 <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#e91e63' }}>৳{p.price}</span>
-                <button style={{ backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
-                  অর্ডার করুন
-                </button>
+                <button 
+  onClick={() => {
+    const subject = encodeURIComponent(`নতুন অর্ডার: ${p.name}`);
+    const body = encodeURIComponent(`প্রোডাক্ট: ${p.name}\nদাম: ${p.price}\n\nআমার নাম:\nঠিকানা:\nমোবাইল নাম্বার:`);
+    window.location.href = `mailto:adnansamineloy123@gmail.com?subject=${subject}&body=${body}`;
+  }}
+  style={{ backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}
+>
+  অর্ডার করুন
+</button>
+  
               </div>
             </div>
           </div>
