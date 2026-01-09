@@ -39,7 +39,7 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '15px', fontFamily: 'Arial, sans-serif' }}>
       <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: '#333' }}>🛍️ আমার অনলাইন শপ</h1>
+        <h1 style={{ color: '#333' }}>🛍️সুডলিংপং অনলাইন শপ</h1>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
