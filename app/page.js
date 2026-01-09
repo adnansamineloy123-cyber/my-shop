@@ -9,44 +9,59 @@ export default function Home() {
   const [isOrdered, setIsOrdered] = useState(false);
 
   useEffect(() => {
+    // প্রোডাক্ট লিস্ট লোড করা
     fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb')
       .then(res => res.json())
       .then(data => setProducts(data));
   }, []);
 
   const deliveryCharge = 140;
-  const totalPrice = selectedProduct ? (selectedProduct.price * quantity) + deliveryCharge : 0;
+  const totalPrice = selectedProduct ? (Number(selectedProduct.price) * quantity) + deliveryCharge : 0;
 
   const handleOrder = async () => {
+    // এখানে আপনার গুগল শিটের কলামের নামের সাথে মিল রাখা হয়েছে
     const orderData = {
-      name: customerInfo.name,
-      phone: customerInfo.phone,
-      address: customerInfo.address,
-      order_details: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK`
+      customer_name: customerInfo.name, // শিটে কলাম: customer_name
+      phone_number: customerInfo.phone, // শিটে কলাম: phone_number
+      address: customerInfo.address,    // শিটে কলাম: address
+      product_name: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK` // শিটে কলাম: product_name
     };
 
-    // আপনার SheetDB লিঙ্ক ব্যবহার করে ডাটা পাঠানো হচ্ছে (Sheet2 তে)
-    await fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb?sheet=Sheet2', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [orderData] })
-    });
+    try {
+      const response = await fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb?sheet=Sheet2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: [orderData] })
+      });
 
-    setIsOrdered(true);
-    setTimeout(() => { setIsOrdered(false); setSelectedProduct(null); }, 3000);
+      if (response.ok) {
+        setIsOrdered(true);
+        setTimeout(() => { 
+          setIsOrdered(false); 
+          setSelectedProduct(null);
+          setQuantity(1);
+          setCustomerInfo({ name: '', phone: '', address: '' });
+        }, 3000);
+      } else {
+        alert("অর্ডার পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("ইন্টারনেট সংযোগ চেক করুন।");
+    }
   };
 
   return (
     <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '15px', fontFamily: 'Arial, sans-serif' }}>
       <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: '#333' }}>🛍️সুডলিংপং অনলাইন শপ</h1>
+        <h1 style={{ color: '#333' }}>🛍️ আমার অনলাইন শপ</h1>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
         {products.map((p, index) => (
           <div key={index} style={{ backgroundColor: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '15px' }}>
-            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '10px' }} />
-            <h3>{p.name}</h3>
+            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '10px' }} />
+            <h3 style={{ fontSize: '16px', margin: '10px 0' }}>{p.name}</h3>
             <p style={{ fontWeight: 'bold', color: '#e91e63' }}>৳{p.price}</p>
             <button onClick={() => setSelectedProduct(p)} style={{ width: '100%', backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}>অর্ডার করুন</button>
           </div>
@@ -55,7 +70,7 @@ export default function Home() {
 
       {selectedProduct && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px' }}>
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
             {isOrdered ? (
               <div style={{ textAlign: 'center', padding: '20px' }}>
                 <h2 style={{ color: 'green' }}>✅ অর্ডার সফল হয়েছে!</h2>
@@ -64,12 +79,15 @@ export default function Home() {
             ) : (
               <>
                 <h2 style={{ fontSize: '18px' }}>অর্ডার: {selectedProduct.name}</h2>
-                <input type="text" placeholder="আপনার নাম" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} />
-                <input type="number" placeholder="মোবাইল নম্বর" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} />
-                <input type="number" placeholder="পরিমাণ" min="1" value={quantity} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setQuantity(e.target.value)} />
-                <textarea placeholder="ফুল ঠিকানা" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}></textarea>
-                <p>ডেলিভারি চার্জ: ৳১৪০ | <b>মোট: ৳{totalPrice}</b></p>
-                <button onClick={handleOrder} style={{ width: '100%', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer' }}>অর্ডার কনফার্ম করুন</button>
+                <input type="text" placeholder="আপনার নাম" value={customerInfo.name} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px' }} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} />
+                <input type="text" placeholder="মোবাইল নম্বর" value={customerInfo.phone} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px' }} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} />
+                <div style={{ margin: '10px 0' }}>
+                   <label>পরিমাণ: </label>
+                   <input type="number" min="1" value={quantity} style={{ width: '50px', padding: '5px' }} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} />
+                </div>
+                <textarea placeholder="ফুল ঠিকানা (গ্রাম, থানা, জেলা)" value={customerInfo.address} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px', height: '80px' }} onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}></textarea>
+                <p style={{ backgroundColor: '#fff9c4', padding: '10px', borderRadius: '5px' }}>ডেলিভারি চার্জ: ৳১৪০ | <b>মোট: ৳{totalPrice}</b></p>
+                <button onClick={handleOrder} disabled={!customerInfo.name || !customerInfo.phone || !customerInfo.address} style={{ width: '100%', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>অর্ডার কনফার্ম করুন</button>
                 <button onClick={() => setSelectedProduct(null)} style={{ width: '100%', background: 'none', border: 'none', marginTop: '10px', color: 'red', cursor: 'pointer' }}>বন্ধ করুন</button>
               </>
             )}
@@ -78,5 +96,4 @@ export default function Home() {
       )}
     </div>
   );
-    }
-      
+}
