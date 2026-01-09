@@ -63,7 +63,7 @@ export default function Home() {
         borderBottom: '1px solid #ddd',
         marginBottom: '20px'
       }}>
-        <h1 style={{ color: '#333', margin: 0 }}>🛍️ আমার অনলাইন শপ</h1>
+        <h1 style={{ color: '#333', margin: 0 }}>🛍️ চুদলিংপং অনলাইন শপ</h1>
         <p style={{ margin: '5px 0 0', color: '#666' }}>সেরা পণ্য, সঠিক দাম!</p>
       </header>
 
