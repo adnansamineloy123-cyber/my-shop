@@ -9,7 +9,6 @@ export default function Home() {
   const [isOrdered, setIsOrdered] = useState(false);
 
   useEffect(() => {
-    // প্রোডাক্ট লিস্ট লোড করা
     fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb')
       .then(res => res.json())
       .then(data => setProducts(data));
@@ -19,12 +18,11 @@ export default function Home() {
   const totalPrice = selectedProduct ? (Number(selectedProduct.price) * quantity) + deliveryCharge : 0;
 
   const handleOrder = async () => {
-    // এখানে আপনার গুগল শিটের কলামের নামের সাথে মিল রাখা হয়েছে
     const orderData = {
-      customer_name: customerInfo.name, // শিটে কলাম: customer_name
-      phone_number: customerInfo.phone, // শিটে কলাম: phone_number
-      address: customerInfo.address,    // শিটে কলাম: address
-      product_name: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK` // শিটে কলাম: product_name
+      customer_name: customerInfo.name,
+      phone_number: customerInfo.phone,
+      address: customerInfo.address,
+      product_name: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK`
     };
 
     try {
@@ -43,7 +41,7 @@ export default function Home() {
           setCustomerInfo({ name: '', phone: '', address: '' });
         }, 3000);
       } else {
-        alert("অর্ডার পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+        alert("অর্ডার পাঠাতে সমস্যা হয়েছে।");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -52,9 +50,21 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '15px', fontFamily: 'Arial, sans-serif' }}>
-      <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: '#333' }}>🛍️ আমার অনলাইন শপ</h1>
+    <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '0 15px 15px 15px', fontFamily: 'Arial, sans-serif' }}>
+      
+      {/* স্ট্যাবল হেডার অংশ */}
+      <header style={{ 
+        textAlign: 'center', 
+        position: 'sticky', 
+        top: 0, 
+        backgroundColor: '#f4f4f4', 
+        zIndex: 100, 
+        padding: '20px 0',
+        borderBottom: '1px solid #ddd',
+        marginBottom: '20px'
+      }}>
+        <h1 style={{ color: '#333', margin: 0 }}>🛍️ আমার অনলাইন শপ</h1>
+        <p style={{ margin: '5px 0 0', color: '#666' }}>সেরা পণ্য, সঠিক দাম!</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
@@ -69,7 +79,7 @@ export default function Home() {
       </div>
 
       {selectedProduct && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1001 }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
             {isOrdered ? (
               <div style={{ textAlign: 'center', padding: '20px' }}>
@@ -96,4 +106,5 @@ export default function Home() {
       )}
     </div>
   );
-}
+        }
+          
