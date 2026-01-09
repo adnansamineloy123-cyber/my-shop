@@ -3,47 +3,80 @@ import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', address: '' });
+  const [isOrdered, setIsOrdered] = useState(false);
 
   useEffect(() => {
-    // আপনার SheetDB লিঙ্ক থেকে ডাটা আনা হচ্ছে
     fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb')
       .then(res => res.json())
       .then(data => setProducts(data));
   }, []);
 
+  const deliveryCharge = 140;
+  const totalPrice = selectedProduct ? (selectedProduct.price * quantity) + deliveryCharge : 0;
+
+  const handleOrder = async () => {
+    const orderData = {
+      name: customerInfo.name,
+      phone: customerInfo.phone,
+      address: customerInfo.address,
+      order_details: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK`
+    };
+
+    // আপনার SheetDB লিঙ্ক ব্যবহার করে ডাটা পাঠানো হচ্ছে (Sheet2 তে)
+    await fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb?sheet=Sheet2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [orderData] })
+    });
+
+    setIsOrdered(true);
+    setTimeout(() => { setIsOrdered(false); setSelectedProduct(null); }, 3000);
+  };
+
   return (
     <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '15px', fontFamily: 'Arial, sans-serif' }}>
       <header style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: '#333', fontSize: '28px' }}>🛍️ আমার অনলাইন শপ</h1>
-        <p style={{ color: '#666' }}>সেরা পণ্য, সঠিক দাম!</p>
+        <h1 style={{ color: '#333' }}>🛍️ আমার অনলাইন শপ</h1>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
         {products.map((p, index) => (
-          <div key={index} style={{ backgroundColor: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '200px', objectCover: 'cover' }} />
-            <div style={{ padding: '15px' }}>
-              <h3 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>{p.name}</h3>
-              <p style={{ color: '#777', fontSize: '14px', height: '40px', overflow: 'hidden' }}>{p.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#e91e63' }}>৳{p.price}</span>
-                <button 
-  onClick={() => {
-    const subject = encodeURIComponent(`নতুন অর্ডার: ${p.name}`);
-    const body = encodeURIComponent(`প্রোডাক্ট: ${p.name}\nদাম: ${p.price}\n\nআমার নাম:\nঠিকানা:\nমোবাইল নাম্বার:`);
-    window.location.href = `mailto:adnansamineloy123@gmail.com?subject=${subject}&body=${body}`;
-  }}
-  style={{ backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}
->
-  অর্ডার করুন
-</button>
-  
-              </div>
-            </div>
+          <div key={index} style={{ backgroundColor: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '15px' }}>
+            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '10px' }} />
+            <h3>{p.name}</h3>
+            <p style={{ fontWeight: 'bold', color: '#e91e63' }}>৳{p.price}</p>
+            <button onClick={() => setSelectedProduct(p)} style={{ width: '100%', backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}>অর্ডার করুন</button>
           </div>
         ))}
       </div>
+
+      {selectedProduct && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px' }}>
+            {isOrdered ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <h2 style={{ color: 'green' }}>✅ অর্ডার সফল হয়েছে!</h2>
+                <p>আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ fontSize: '18px' }}>অর্ডার: {selectedProduct.name}</h2>
+                <input type="text" placeholder="আপনার নাম" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} />
+                <input type="number" placeholder="মোবাইল নম্বর" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} />
+                <input type="number" placeholder="পরিমাণ" min="1" value={quantity} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setQuantity(e.target.value)} />
+                <textarea placeholder="ফুল ঠিকানা" style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd' }} onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}></textarea>
+                <p>ডেলিভারি চার্জ: ৳১৪০ | <b>মোট: ৳{totalPrice}</b></p>
+                <button onClick={handleOrder} style={{ width: '100%', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer' }}>অর্ডার কনফার্ম করুন</button>
+                <button onClick={() => setSelectedProduct(null)} style={{ width: '100%', background: 'none', border: 'none', marginTop: '10px', color: 'red', cursor: 'pointer' }}>বন্ধ করুন</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-  }
-    
+    }
+      
