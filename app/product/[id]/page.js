@@ -2,9 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-// এই অংশটি এরর ফিক্স করার জন্য অত্যন্ত জরুরি
-export const dynamicParams = true; 
-
 export default function ProductDetails() {
   const params = useParams();
   const id = params?.id;
@@ -12,18 +9,24 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // আইডি না থাকলে কল করবে না
     if (!id) return;
     
-    // আপনার API থেকে ডাটা আনা হচ্ছে
-    fetch(`https://sheetdb.io/api/v1/m33fi9ryxfogc/search?id=${id}`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`https://sheetdb.io/api/v1/m33fi9ryxfogc/search?id=${id}`);
+        const data = await res.json();
         if (data && data.length > 0) {
           setProduct(data[0]);
         }
+      } catch (error) {
+        console.error("ডাটা আনতে সমস্যা হয়েছে", error);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchProduct();
   }, [id]);
 
   if (loading) return <div className="flex justify-center items-center h-screen font-bold">লোড হচ্ছে...</div>;
@@ -42,9 +45,9 @@ export default function ProductDetails() {
           <p className="text-2xl font-bold text-yellow-700 mb-6">৳{product.price}</p>
           <div className="border-t border-gray-100 pt-6">
             <p className="text-gray-600 leading-relaxed mb-8">
-              {product.description || "এই প্রিমিয়াম পণ্যটি সম্পর্কে বিস্তারিত জানতে আমাদের সাথে যোগাযোগ করুন। এটি অত্যন্ত টেকসই এবং মানসম্মত।"}
+              {product.description || "এই প্রিমিয়াম পণ্যটি সম্পর্কে বিস্তারিত জানতে আমাদের সাথে যোগাযোগ করুন।"}
             </p>
-            <button className="w-full bg-black text-white py-4 font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all">
+            <button className="w-full bg-black text-white py-4 font-bold uppercase tracking-widest hover:bg-yellow-600">
               ব্যাগ-এ রাখুন
             </button>
           </div>
@@ -52,10 +55,5 @@ export default function ProductDetails() {
       </div>
     </div>
   );
-}
-
-// বিল্ড এরর ফিক্স করার জন্য এই ফাংশনটি নিচে যোগ করে দিন
-export async function generateStaticParams() {
-  return [];
     }
-    
+  
