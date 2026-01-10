@@ -1,110 +1,84 @@
-"use client";
-import { useState, useEffect } from 'react';
+      "use client";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export default function Home() {
+export default function HomePage() {
   const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', address: '' });
-  const [isOrdered, setIsOrdered] = useState(false);
 
+  // আপনার দেওয়া SheetDB API থেকে প্রোডাক্ট আনা
   useEffect(() => {
-    fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb')
+    fetch('https://sheetdb.io/api/v1/m33fi9ryxfogc')
       .then(res => res.json())
       .then(data => setProducts(data));
   }, []);
 
-  const deliveryCharge = 140;
-  const totalPrice = selectedProduct ? (Number(selectedProduct.price) * quantity) + deliveryCharge : 0;
-
-  const handleOrder = async () => {
-    const orderData = {
-      customer_name: customerInfo.name,
-      phone_number: customerInfo.phone,
-      address: customerInfo.address,
-      product_name: `${selectedProduct.name} (Qty: ${quantity}) - Total: ${totalPrice} TK`
-    };
-
-    try {
-      const response = await fetch('https://sheetdb.io/api/v1/w51cfqk66hrnb?sheet=Sheet2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: [orderData] })
-      });
-
-      if (response.ok) {
-        setIsOrdered(true);
-        setTimeout(() => { 
-          setIsOrdered(false); 
-          setSelectedProduct(null);
-          setQuantity(1);
-          setCustomerInfo({ name: '', phone: '', address: '' });
-        }, 3000);
-      } else {
-        alert("অর্ডার পাঠাতে সমস্যা হয়েছে।");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("ইন্টারনেট সংযোগ চেক করুন।");
-    }
-  };
-
   return (
-    <div style={{ backgroundColor: '#f4f4f4', minHeight: '100vh', padding: '0 15px 15px 15px', fontFamily: 'Arial, sans-serif' }}>
+    <div className="pb-10">
       
-      {/* স্ট্যাবল হেডার অংশ */}
-      <header style={{ 
-        textAlign: 'center', 
-        position: 'sticky', 
-        top: 0, 
-        backgroundColor: '#f4f4f4', 
-        zIndex: 100, 
-        padding: '20px 0',
-        borderBottom: '1px solid #ddd',
-        marginBottom: '20px'
-      }}>
-        <h1 style={{ color: '#333', margin: 0 }}>🛍️ চুদলিংপং অনলাইন শপ</h1>
-        <p style={{ margin: '5px 0 0', color: '#666' }}>সেরা পণ্য, সঠিক দাম!</p>
-      </header>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-        {products.map((p, index) => (
-          <div key={index} style={{ backgroundColor: '#fff', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '15px' }}>
-            <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '10px' }} />
-            <h3 style={{ fontSize: '16px', margin: '10px 0' }}>{p.name}</h3>
-            <p style={{ fontWeight: 'bold', color: '#e91e63' }}>৳{p.price}</p>
-            <button onClick={() => setSelectedProduct(p)} style={{ width: '100%', backgroundColor: '#0070f3', color: '#fff', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}>অর্ডার করুন</button>
-          </div>
-        ))}
-      </div>
-
-      {selectedProduct && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1001 }}>
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
-            {isOrdered ? (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <h2 style={{ color: 'green' }}>✅ অর্ডার সফল হয়েছে!</h2>
-                <p>আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
-              </div>
-            ) : (
-              <>
-                <h2 style={{ fontSize: '18px' }}>অর্ডার: {selectedProduct.name}</h2>
-                <input type="text" placeholder="আপনার নাম" value={customerInfo.name} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px' }} onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})} />
-                <input type="text" placeholder="মোবাইল নম্বর" value={customerInfo.phone} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px' }} onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})} />
-                <div style={{ margin: '10px 0' }}>
-                   <label>পরিমাণ: </label>
-                   <input type="number" min="1" value={quantity} style={{ width: '50px', padding: '5px' }} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} />
-                </div>
-                <textarea placeholder="ফুল ঠিকানা (গ্রাম, থানা, জেলা)" value={customerInfo.address} style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ddd', borderRadius: '5px', height: '80px' }} onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}></textarea>
-                <p style={{ backgroundColor: '#fff9c4', padding: '10px', borderRadius: '5px' }}>ডেলিভারি চার্জ: ৳১৪০ | <b>মোট: ৳{totalPrice}</b></p>
-                <button onClick={handleOrder} disabled={!customerInfo.name || !customerInfo.phone || !customerInfo.address} style={{ width: '100%', backgroundColor: '#28a745', color: '#fff', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>অর্ডার কনফার্ম করুন</button>
-                <button onClick={() => setSelectedProduct(null)} style={{ width: '100%', background: 'none', border: 'none', marginTop: '10px', color: 'red', cursor: 'pointer' }}>বন্ধ করুন</button>
-              </>
-            )}
-          </div>
+      {/* ১. হিরো সেকশন (ব্যাকগ্রাউন্ড ইমেজ ও টেক্সট) */}
+      <section className="relative h-[450px] md:h-[600px] flex items-center justify-center text-white overflow-hidden">
+        {/* ব্যাকগ্রাউন্ড ইমেজ (আপনার নমুনা অনুযায়ী) */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-1000 hover:scale-105"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070')" }}
+        >
+          {/* কালো একটা আস্তরণ যাতে লেখা পরিষ্কার বোঝা যায় */}
+          <div className="absolute inset-0 bg-black/40"></div>
         </div>
-      )}
+
+        <div className="relative z-10 text-center px-4">
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4 animate-fade-in">
+            নতুন কালেকশন ২০২৬
+          </h2>
+          <p className="text-lg md:text-xl font-light mb-8 tracking-widest opacity-90">
+            সেরা মানের পোশাক এখন আপনার হাতের মুঠোয়।
+          </p>
+          <button className="bg-yellow-600 text-white px-8 py-3 font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300">
+            এখনই কিনুন
+          </button>
+        </div>
+      </section>
+
+      {/* ২. আমাদের পণ্যসমূহ টাইটেল */}
+      <div className="max-w-6xl mx-auto mt-12 px-4">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-8 w-1.5 bg-yellow-600"></div>
+          <h3 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">আমাদের পণ্যসমূহ</h3>
+        </div>
+
+        {/* ৩. প্রোডাক্ট লিস্ট (গুগল শিট থেকে) */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+          {products.map((item) => (
+            <div key={item.id} className="product-card-shadow bg-white relative group">
+              
+              {/* ছবির ওপর ক্লিক করলে ডিটেইলস পেজে যাবে */}
+              <Link href={`/product/${item.id}`}>
+                <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+                  <img 
+                    src={item.image_url} 
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                  />
+                  {/* আপনার সেই প্রিয় 'New' ব্যাজ (শিট থেকে 'tag' কলাম থাকলে ওটা দেখাবে) */}
+                  <div className="promo-badge">
+                    {item.tag || 'New'}
+                  </div>
+                </div>
+              </Link>
+
+              <div className="p-4 text-center">
+                <h4 className="text-xs md:text-sm font-medium text-gray-600 uppercase mb-1 truncate">{item.name}</h4>
+                <p className="text-base md:text-lg font-bold text-black mb-3">৳{item.price}</p>
+                
+                {/* ব্যাগ-এ রাখুন বাটন */}
+                <button className="w-full bg-[#1e293b] text-white py-2 text-xs md:text-sm font-bold hover:bg-yellow-600 transition-colors duration-300">
+                  ব্যাগ-এ রাখুন
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
-        }
-          
+            }
