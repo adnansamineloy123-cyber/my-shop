@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-// এই লাইনটি Vercel এর বিল্ড এরর ফিক্স করবে
-export const dynamic = 'force-dynamic';
+// এই অংশটি এরর ফিক্স করার জন্য অত্যন্ত জরুরি
+export const dynamicParams = true; 
 
 export default function ProductDetails() {
   const params = useParams();
@@ -14,6 +14,7 @@ export default function ProductDetails() {
   useEffect(() => {
     if (!id) return;
     
+    // আপনার API থেকে ডাটা আনা হচ্ছে
     fetch(`https://sheetdb.io/api/v1/m33fi9ryxfogc/search?id=${id}`)
       .then(res => res.json())
       .then(data => {
@@ -41,9 +42,9 @@ export default function ProductDetails() {
           <p className="text-2xl font-bold text-yellow-700 mb-6">৳{product.price}</p>
           <div className="border-t border-gray-100 pt-6">
             <p className="text-gray-600 leading-relaxed mb-8">
-              {product.description || "এই প্রিমিয়াম পণ্যটি সম্পর্কে বিস্তারিত জানতে আমাদের সাথে যোগাযোগ করুন।"}
+              {product.description || "এই প্রিমিয়াম পণ্যটি সম্পর্কে বিস্তারিত জানতে আমাদের সাথে যোগাযোগ করুন। এটি অত্যন্ত টেকসই এবং মানসম্মত।"}
             </p>
-            <button className="w-full bg-black text-white py-4 font-bold uppercase tracking-widest hover:bg-yellow-600">
+            <button className="w-full bg-black text-white py-4 font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all">
               ব্যাগ-এ রাখুন
             </button>
           </div>
@@ -51,5 +52,10 @@ export default function ProductDetails() {
       </div>
     </div>
   );
+}
+
+// বিল্ড এরর ফিক্স করার জন্য এই ফাংশনটি নিচে যোগ করে দিন
+export async function generateStaticParams() {
+  return [];
     }
-  
+    
