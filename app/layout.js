@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'আমার অনলাইন শপ',
+  title: 'সুডলিংপং অনলাইন শপ',
   description: 'সেরা পণ্য কিনুন ফ্রিতে',
 }
 
